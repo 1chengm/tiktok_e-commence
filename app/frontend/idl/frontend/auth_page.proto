@@ -1,0 +1,33 @@
+// idl/hello/hello.proto
+syntax = "proto3";
+
+package frontend.auth;
+
+option go_package = "frontend/auth";
+
+import "api.proto";
+import "frontend/common.proto";
+
+message loginReq {
+    string email = 1[(api.form) = "email"];
+    string password = 2[(api.form) = "password"];
+    string next = 3[(api.query) = "next"];
+}
+message registerReq {
+    string email = 1[(api.form) = "email"];
+    string password = 2[(api.form) = "password"];
+    string password_confirm = 3[(api.form) = "password_confirm"];
+}
+service AuthService {
+   rpc login(loginReq) returns(common.Empty) {
+      option (api.post) = "/auth/login";
+
+   }
+   rpc logout(common.Empty) returns(common.Empty) {
+      option (api.post) = "/auth/logout";
+   }
+   rpc register(loginReq) returns(common.Empty) {
+      option (api.post) = "/auth/register";
+   }
+   
+}
