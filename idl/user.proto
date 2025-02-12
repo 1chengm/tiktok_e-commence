@@ -1,0 +1,31 @@
+// 
+syntax = "proto3";
+
+package user;
+
+option go_package = "/user";
+
+//import "api.proto";
+
+message LoginReq {
+   string email = 1;
+   string password = 2;
+}
+message LoginResp {
+   int32 user_id = 1;
+}
+
+message RegisterReq {
+   string email = 1;
+   string password = 2;
+   string password_confirm = 3;
+}
+message RegisterResp {
+   int32 user_id = 1;
+}
+service UserService {
+   rpc Login(LoginReq) returns(LoginResp) {
+   }
+   rpc Register(RegisterReq) returns(RegisterResp) {
+   }
+}

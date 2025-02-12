@@ -35,7 +35,7 @@ func Login(ctx context.Context, c *app.RequestContext) {
 // @router /auth/register [POST]
 func Register(ctx context.Context, c *app.RequestContext) {
 	var err error
-	var req auth.LoginReq
+	var req auth.RegisterReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
@@ -68,5 +68,6 @@ func Logout(ctx context.Context, c *app.RequestContext) {
 		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
 		return
 	}
-	c.Redirect(consts.StatusOK, []byte("/"))
+	redirect := "/"
+	c.Redirect(consts.StatusOK, []byte(redirect))
 }

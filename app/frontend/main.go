@@ -9,6 +9,7 @@ import (
 
 	"gomall/app/frontend/biz/router"
 	"gomall/app/frontend/conf"
+	"gomall/app/frontend/infra/rpc"
 	"gomall/app/frontend/middleware"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -33,6 +34,7 @@ func main() {
 	// init dal
 	// dal.Init()
 	_ = godotenv.Load()
+	rpc.Init()
 	address := conf.GetConf().Hertz.Address
 	h := server.New(server.WithHostPorts(address))
 
@@ -49,14 +51,14 @@ func main() {
 	h.GET("/sign-in", func(c context.Context, ctx *app.RequestContext) {
 		data := utils.H{
 			"Title": "Sign In",
-			"Next":  ctx.Request.Header.Get("Referer"),
+			"Next":  ctx.Query("next"),
 		}
 		ctx.HTML(consts.StatusOK,"sign-in",data)
 	})
 	h.GET("/sign-up", func(c context.Context, ctx *app.RequestContext) {
 		ctx.HTML(consts.StatusOK,"sign-up",utils.H{"Title": "Sign Up"})
 	})
-	h.GET("/about", middleware.Auth(), func(c context.Context, ctx *app.RequestContext) {
+	h.GET("/about",  func(c context.Context, ctx *app.RequestContext) {
 		ctx.HTML(consts.StatusOK,"about",utils.H{"Title": "About"})
 	})
 	h.Spin()
