@@ -4,10 +4,12 @@ import (
 	"context"
 	order "gomall/rpc_gen/kitex_gen/order"
 
+	"gomall/app/order/biz/model"
+	"gomall/app/order/biz/dal/mysql"
+
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"gomall/app/order/model/mysql"
 )
 
 type PlaceOrderService struct {
@@ -25,9 +27,46 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 		return
 	}
 	err = mysql.DB.Transaction(func(tx *gorm.DB) error {
-		orderId, err := uuid.NewRandom()
+		orderId, _ := uuid.NewUUID()
+		
+		o := &model.Order{
+			OrderId: orderId.String(),
+			UserId: uint(req.UserId),
+			UserCurrency: req.UserCurrency,
+			Consignee: model.Consignee{
+					Email: req.Email,
+			},
+		}
+		if req.Address != nil {
+			a := req.Address
+			o.Consignee.StreetAddress = a.StreetAddress
+			o.Consignee.City = a.City
+			o.Consignee.State = a.State
+			o.Consignee.Country = a.Country
+			o.Consignee.ZipCode = int32(a.ZipCode)
+		}
+		if err := tx.Create(o).Error; err != nil {
+			return err
+		}
+		var items []model.OrderItem
+		for _, v := range req.Items {
+			items = append(items, model.OrderItem{
+				OrderIdRefer: orderId.String(),
+				ProductId: v.Item.ProductId,
+				Quantity: v.Item.Quantity,
+				Cost: float32(v.Cost),
+			})
+		}
 
-
+		if err := tx.Create(items).Error; err != nil {
+			return err
+		}
+		resp = &order.PlaceOrderResp{
+			Order: &order.OrderResult{
+				OrderId: orderId.String(),
+			},
+		}
+		return nil
 	})
 		
 	return

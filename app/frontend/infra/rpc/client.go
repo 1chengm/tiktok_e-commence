@@ -7,6 +7,7 @@ import (
 	"gomall/rpc_gen/kitex_gen/user/userservice"
 	cartservice "gomall/rpc_gen/kitex_gen/cart/cartservice"
 	checkoutservice "gomall/rpc_gen/kitex_gen/checkout/checkoutservice"
+	orderservice "gomall/rpc_gen/kitex_gen/order/orderservice"
 	"sync"
 
 	"github.com/cloudwego/kitex/client"
@@ -18,6 +19,7 @@ var (
 	ProductClient productcatalogservice.Client
 	CartClient cartservice.Client
 	CheckoutClient checkoutservice.Client
+	OrderClient orderservice.Client
 	once sync.Once
 )
 func Init() {
@@ -26,6 +28,7 @@ func Init() {
 		initProductClient()
 		initCartClient()
 		initCheckoutClient()
+		initOrderClient()
 	})
 }
 func initUserClient() {
@@ -57,5 +60,12 @@ func initCheckoutClient(){
 	r, err := consul.NewConsulResolver(conf.GetConf().Hertz.RegistryAddr)
 	frontendUtils.MustHandleError(err)
 	CheckoutClient, err = checkoutservice.NewClient("checkout", client.WithResolver(r))
+	frontendUtils.MustHandleError(err)
+}
+func initOrderClient(){
+	// 服务发现
+	r, err := consul.NewConsulResolver(conf.GetConf().Hertz.RegistryAddr)
+	frontendUtils.MustHandleError(err)
+	OrderClient, err = orderservice.NewClient("order", client.WithResolver(r))
 	frontendUtils.MustHandleError(err)
 }

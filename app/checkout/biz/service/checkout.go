@@ -5,13 +5,12 @@ import (
 	"gomall/app/checkout/infra/rpc"
 	cart "gomall/rpc_gen/kitex_gen/cart"
 	checkout "gomall/rpc_gen/kitex_gen/checkout"
+	"gomall/rpc_gen/kitex_gen/order"
 	payment "gomall/rpc_gen/kitex_gen/payment"
 	product "gomall/rpc_gen/kitex_gen/product"
 
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/klog"
-
-	"github.com/google/uuid"
 )
 
 type CheckoutService struct {
@@ -31,7 +30,10 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 	if cartResult == nil || cartResult.Items == nil || len(cartResult.Items) == 0 {
 		return nil, kerrors.NewBizStatusError(5004001, "cart is empty")
 	}
-	var total float32
+	var (
+		oi []*order.OrderItem
+		total float32
+	)
 	for _, item := range cartResult.Items {
 		productResp, resulterr := rpc.ProductClient.GetProduct(s.ctx, &product.GetProductReq{
 			Id : item.ProductId,
@@ -45,10 +47,35 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 		 p := productResp.Product
 		cost := p.Price * float32(item.Quantity)
 		total += cost
+		oi = append(oi, &order.OrderItem{
+			Item: &cart.GetItem{
+				ProductId: item.ProductId,
+				Quantity: item.Quantity,
+			},
+			Cost: cost,
+		})
+
 	}
 	var  orderId string
-	u, _ := uuid.NewRandom()
-	orderId = u.String()
+	orderResp, err := rpc.OrderClient.PlaceOrder(s.ctx, &order.PlaceOrderReq{
+		UserId: req.UserId,
+		Email: req.Email,
+		Address: &order.Address{
+			StreetAddress: req.Address.StreetAddress,
+			City: req.Address.City,
+			State: req.Address.State,
+			ZipCode: req.Address.ZipCode,
+		},
+		Items: oi,
+	})
+	if err != nil {
+		return nil, kerrors.NewBizStatusError(5004001, err.Error())
+	}
+
+	if orderResp != nil && orderResp.Order != nil {
+		orderId = orderResp.Order.OrderId
+	}
+
 	payReq := &payment.ChargeReq{
 		UserId: req.UserId,
 		OrderId: orderId,
