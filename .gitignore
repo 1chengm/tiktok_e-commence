@@ -3,3 +3,4 @@
 /app/*/docker-compose.yaml
 /app/*/script
 /app/*/build.sh
+/app/*/readme.md
