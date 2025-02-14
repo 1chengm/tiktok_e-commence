@@ -1,0 +1,5 @@
+.vscode
+.env
+/app/*/docker-compose.yaml
+/app/*/script
+/app/*/build.sh
