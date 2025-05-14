@@ -27,9 +27,9 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 	// hlog.CtxInfof(h.Context, "resp = %+v", resp)
 	//}()
 	// todo login-svr
-	resp, err:= rpc.UserClient.Login(h.Context, &user.LoginReq{
-		Email : req.Email,
-		Password : req.Password,
+	resp, err := rpc.UserClient.Login(h.Context, &user.LoginReq{
+		Email:    req.Email,
+		Password: req.Password,
 	})
 
 	if err != nil {
@@ -37,8 +37,9 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 	}
 
 	session := sessions.Default(h.RequestContext)
-	
+
 	session.Set("user_id", resp.UserId)
+	session.Set("jwt_token", resp.Token) // Store the JWT token
 	err = session.Save()
 	if err != nil {
 		hlog.Error("Failed to save session", err)

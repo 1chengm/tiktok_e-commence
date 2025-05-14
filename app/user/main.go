@@ -6,6 +6,7 @@ import (
 
 	"gomall/app/user/biz/dal"
 	"gomall/app/user/conf"
+	"gomall/app/user/utils"
 	"gomall/rpc_gen/kitex_gen/user/userservice"
 
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -13,7 +14,7 @@ import (
 	"github.com/cloudwego/kitex/server"
 	"github.com/joho/godotenv"
 	kitexlogrus "github.com/kitex-contrib/obs-opentelemetry/logging/logrus"
-	"github.com/kitex-contrib/registry-consul"
+	consul "github.com/kitex-contrib/registry-consul"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -21,8 +22,9 @@ import (
 func main() {
 	err := godotenv.Load("../.env")
 	if err != nil {
-		klog.Error(err.Error())
+		klog.Fatalf("Error loading .env file in user service: %v", err)
 	}
+	utils.InitJWTKey()
 	dal.Init()
 
 	opts := kitexInit()

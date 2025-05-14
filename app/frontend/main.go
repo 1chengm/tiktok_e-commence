@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"fmt" // For error handling during init
 	"os"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"gomall/app/frontend/conf"
 	"gomall/app/frontend/infra/rpc"
 	"gomall/app/frontend/middleware"
+	frontendUtils "gomall/app/frontend/utils" // Ensure this points to your frontend utils
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/middlewares/server/recovery"
@@ -28,12 +30,16 @@ import (
 	"github.com/joho/godotenv"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-)	
+)
 
 func main() {
 	// init dal
 	// dal.Init()
-	_ = godotenv.Load()
+	err := godotenv.Load() // Loads .env from the current directory (app/frontend)
+	if err != nil {
+		panic(fmt.Sprintf("Error loading .env file in frontend service: %v", err))
+	}
+	frontendUtils.InitJWTKey()            // Initialize JWT secret key for frontend
 	rpc.Init()
 	address := conf.GetConf().Hertz.Address
 	h := server.New(server.WithHostPorts(address))
@@ -53,13 +59,13 @@ func main() {
 			"Title": "Sign In",
 			"Next":  ctx.Query("next"),
 		}
-		ctx.HTML(consts.StatusOK,"sign-in",data)
+		ctx.HTML(consts.StatusOK, "sign-in", data)
 	})
 	h.GET("/sign-up", func(c context.Context, ctx *app.RequestContext) {
-		ctx.HTML(consts.StatusOK,"sign-up",utils.H{"Title": "Sign Up"})
+		ctx.HTML(consts.StatusOK, "sign-up", utils.H{"Title": "Sign Up"})
 	})
 	h.GET("/about", middleware.Auth(), func(c context.Context, ctx *app.RequestContext) {
-		ctx.HTML(consts.StatusOK,"about",utils.H{"Title": "About"})
+		ctx.HTML(consts.StatusOK, "about", utils.H{"Title": "About"})
 	})
 	h.Spin()
 }
